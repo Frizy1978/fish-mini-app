@@ -12,3 +12,5 @@ apps/api/prisma/dev.db-journal
 apps/api/.env
 apps/web/.env.local
 coverage
+
+/generated/prisma
