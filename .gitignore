@@ -1,6 +1,7 @@
 node_modules
 .next
 dist
+build
 .turbo
 .env
 .env.local
@@ -8,3 +9,6 @@ coverage
 *.log
 apps/api/prisma/dev.db
 apps/api/prisma/dev.db-journal
+apps/api/.env
+apps/web/.env.local
+coverage
