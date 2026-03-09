@@ -1,0 +1,20 @@
+{
+  "name": "fominiapp",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --workspace @fominiapp/web",
+    "dev:api": "npm run dev --workspace @fominiapp/api",
+    "build": "npm run build --workspace @fominiapp/shared && npm run build --workspace @fominiapp/api && npm run build --workspace @fominiapp/web",
+    "typecheck": "npm run typecheck --workspace @fominiapp/shared && npm run typecheck --workspace @fominiapp/api && npm run typecheck --workspace @fominiapp/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.2"
+  }
+}

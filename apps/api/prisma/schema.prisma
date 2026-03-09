@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BatchStatus {
+  draft
+  open
+  closed
+  archived
+}
+
+enum RequestStatus {
+  draft
+  submitted
+  cancelled
+  confirmed
+  adjustment_requested
+  packed
+  ready_for_pickup
+  completed
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  telegramUserId   String    @unique
+  telegramUsername String?
+  firstName        String
+  lastName         String?
+  phone            String?
+  city             String
+  pickupPoint      String
+  requests         Request[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Batch {
+  id           Int         @id @default(autoincrement())
+  batchId      String      @unique
+  title        String
+  city         String
+  pickupPoint  String
+  status       BatchStatus
+  startAt      DateTime
+  endAt        DateTime
+  pickupWindow String
+  isActive     Boolean     @default(false)
+  requests     Request[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model ProductCache {
+  id                Int       @id
+  wooProductId      Int       @unique
+  sku               String    @unique
+  name              String
+  slug              String    @unique
+  categoryIdsJson   Json
+  categoryNamesJson Json
+  shortDescription  String
+  fullDescription   String
+  imageUrl          String
+  accent            String
+  price             Decimal   @db.Decimal(10, 2)
+  currency          String
+  unit              String
+  isWeighted        Boolean   @default(false)
+  isNew             Boolean   @default(false)
+  isFeatured        Boolean   @default(false)
+  isActive          Boolean   @default(true)
+  relatedIdsJson    Json
+  payloadJson       Json?
+  syncedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  requestItems      RequestItem[]
+}
+
+model Request {
+  id             Int           @id @default(autoincrement())
+  requestId      String        @unique
+  batchId        Int
+  userId         Int
+  status         RequestStatus @default(submitted)
+  estimatedTotal Decimal       @db.Decimal(10, 2)
+  currency       String
+  comment        String?
+  itemsJson      Json
+  submittedAt    DateTime
+  batch          Batch         @relation(fields: [batchId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  items          RequestItem[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model RequestItem {
+  id                  Int          @id @default(autoincrement())
+  requestId           Int
+  productId           Int
+  productNameSnapshot String
+  skuSnapshot         String
+  unit                String
+  qtyRequested        Decimal      @db.Decimal(10, 2)
+  priceSnapshot       Decimal      @db.Decimal(10, 2)
+  estimatedSum        Decimal      @db.Decimal(10, 2)
+  itemComment         String?
+  isWeighted          Boolean      @default(false)
+  request             Request      @relation(fields: [requestId], references: [id])
+  product             ProductCache @relation(fields: [productId], references: [id])
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+}
+
+model IntegrationJob {
+  id          Int      @id @default(autoincrement())
+  type        String
+  status      String
+  entityId    String?
+  payloadJson Json
+  lastError   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
