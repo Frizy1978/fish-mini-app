@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { z } from "zod";
 
 import { asyncHandler } from "../../lib/http.js";
@@ -31,8 +31,19 @@ const submissionSchema = z.object({
 requestRouter.post(
   "/",
   asyncHandler(async (request, response) => {
+    const session = await authService.getCurrentUser(request.headers.authorization);
     const payload = submissionSchema.parse(request.body);
-    response.status(201).json(await requestService.createRequest(payload));
+
+    response.status(201).json(
+      await requestService.createRequest({
+        ...payload,
+        user: {
+          ...payload.user,
+          telegramUserId: session.user.telegramUserId,
+          telegramUsername: session.user.telegramUsername
+        }
+      })
+    );
   })
 );
 

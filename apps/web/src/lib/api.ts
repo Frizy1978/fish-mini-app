@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   calculateCartPreview,
@@ -9,7 +9,6 @@ import {
   type BatchSummary,
   type CartItemInput,
   type CartPreview,
-  type CreatedRequest,
   type Product,
   type RequestRecord,
   type RequestSubmission,
@@ -63,30 +62,30 @@ function writeMockRequests(items: RequestRecord[]) {
   window.localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(items));
 }
 
-export async function authenticateTelegram(initData?: string, initDataUnsafe?: unknown) {
+function formatMockRequestId(batchSequence: number, requestSequence: number) {
+  return `MSK-${String(batchSequence).padStart(4, "0")}-${String(requestSequence).padStart(8, "0")}`;
+}
+
+export async function authenticateTelegram(initData?: string) {
   if (USE_MOCK_API) {
     return {
       token: "mock-session-token",
+      telegramUserId: demoUser.telegramUserId,
+      isTelegramAuth: false,
+      authMode: "dev",
       user: demoUser
     } satisfies TelegramSession;
   }
 
   return request<TelegramSession>("/api/v1/auth/telegram", {
     method: "POST",
-    body: JSON.stringify({
-      initData,
-      initDataUnsafe
-    })
+    body: JSON.stringify({ initData })
   });
 }
 
-export async function loadBootPayload(
-  initData?: string,
-  initDataUnsafe?: unknown,
-  token?: string
-): Promise<BootPayload> {
+export async function loadBootPayload(initData?: string, token?: string): Promise<BootPayload> {
   if (USE_MOCK_API) {
-    const session = await authenticateTelegram(initData, initDataUnsafe);
+    const session = await authenticateTelegram(initData);
     return {
       batch: mockBatch,
       categories: mockCategories,
@@ -104,7 +103,7 @@ export async function loadBootPayload(
           Authorization: `Bearer ${token}`
         }
       })
-    : await authenticateTelegram(initData, initDataUnsafe);
+    : await authenticateTelegram(initData);
 
   const [batch, categories, products, fresh, featured, myRequests] = await Promise.all([
     request<BatchSummary>("/api/v1/batch/active"),
@@ -137,9 +136,11 @@ export async function previewCart(items: CartItemInput[], token?: string) {
 export async function submitRequest(payload: RequestSubmission, token?: string) {
   if (USE_MOCK_API) {
     const preview = calculateCartPreview(payload.items, mockProducts);
+    const current = readMockRequests();
+    const nextSequence = current.length + 1;
     const created: RequestRecord = {
       id: Date.now(),
-      requestId: `REQ-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-MOCK`,
+      requestId: formatMockRequestId(mockBatch.id, nextSequence),
       status: "submitted",
       estimatedTotal: preview.estimatedTotal,
       currency: "RUB",
@@ -150,7 +151,6 @@ export async function submitRequest(payload: RequestSubmission, token?: string) 
       items: preview.items
     };
 
-    const current = readMockRequests();
     writeMockRequests([created, ...current]);
     return created;
   }

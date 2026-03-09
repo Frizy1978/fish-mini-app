@@ -1,4 +1,4 @@
-import { Inter, Montserrat, Open_Sans } from "next/font/google";
+﻿import { Inter, Montserrat, Open_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 
@@ -24,7 +24,12 @@ const openSans = Open_Sans({
 
 export const metadata: Metadata = {
   title: "Fish Olha",
-  description: "Telegram Mini App для предзаказа рыбы и морепродуктов"
+  description: "Telegram Mini App для предзаказа рыбы и морепродуктов",
+  icons: {
+    icon: "/ui/logo.png",
+    shortcut: "/ui/logo.png",
+    apple: "/ui/logo.png"
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -5,6 +5,7 @@ export type DisplayCategory = {
   title: string;
   subtitle: string;
   imageSrc: string;
+  categoryId: number;
   matches: (product: Product) => boolean;
 };
 
@@ -13,15 +14,15 @@ export const brandAssets = {
   hero: '/ui/hero.png'
 } as const;
 
-const categoryAssets: Record<string, string> = {
-  'fresh-fish': '/ui/catalog-categories/fresh-fish.png',
+const categoryAssets = {
+  fresh: '/ui/catalog-categories/fresh-fish.png',
   conserves: '/ui/catalog-categories/conserves.png',
-  'cold-smoked': '/ui/catalog-categories/cold-smoked.png',
+  coldSmoked: '/ui/catalog-categories/cold-smoked.png',
   seafood: '/ui/catalog-categories/seafood.png',
-  'hot-smoked': '/ui/catalog-categories/hot-smoked.png',
-  'salted-fish': '/ui/catalog-categories/salted-fish.png',
-  'semi-finished': '/ui/catalog-categories/semi-finished.png'
-};
+  hotSmoked: '/ui/catalog-categories/hot-smoked.png',
+  salted: '/ui/catalog-categories/salted-fish.png',
+  semiFinished: '/ui/catalog-categories/semi-finished.png'
+} as const;
 
 const productAssets: Record<string, string> = {
   'salmon-steak': '/ui/products/salmon-steak.png',
@@ -39,78 +40,60 @@ const productAssets: Record<string, string> = {
   default: '/ui/products/default-fish.png'
 };
 
-function findCategoryId(categories: Category[], slug: string) {
-  return categories.find((category) => category.slug === slug)?.id;
+function resolveCategoryImage(category: Category, products: Product[]) {
+  const categoryImageUrl = category.imageUrl?.trim();
+
+  if (categoryImageUrl && /^https?:\/\//i.test(categoryImageUrl)) {
+    return categoryImageUrl;
+  }
+
+  if (categoryImageUrl && categoryImageUrl.startsWith('/')) {
+    return categoryImageUrl;
+  }
+
+  const haystack = `${category.slug} ${category.name}`.toLowerCase();
+
+  if (/fresh|свеж|охлаж/.test(haystack)) {
+    return categoryAssets.fresh;
+  }
+
+  if (/консерв|conserve/.test(haystack)) {
+    return categoryAssets.conserves;
+  }
+
+  if (/cold|холод|копчен/.test(haystack)) {
+    return categoryAssets.coldSmoked;
+  }
+
+  if (/море|seafood|кревет|мид|кальмар/.test(haystack)) {
+    return categoryAssets.seafood;
+  }
+
+  if (/горяч|gril|грил/.test(haystack)) {
+    return categoryAssets.hotSmoked;
+  }
+
+  if (/соль|солен|малосол/.test(haystack)) {
+    return categoryAssets.salted;
+  }
+
+  if (/котлет|полу|пельмен/.test(haystack)) {
+    return categoryAssets.semiFinished;
+  }
+
+  const firstProduct = products.find((product) => product.categoryIds.includes(category.id));
+  return firstProduct ? getDisplayProductImage(firstProduct) : productAssets.default;
 }
 
-function hasCategory(product: Product, categoryId?: number) {
-  return typeof categoryId === 'number' ? product.categoryIds.includes(categoryId) : false;
-}
-
-export function buildDisplayCategories(categories: Category[]): DisplayCategory[] {
-  const freshId = findCategoryId(categories, 'fresh-fish');
-  const smokedId = findCategoryId(categories, 'smoked');
-  const seafoodId = findCategoryId(categories, 'seafood');
-  const semiFinishedId = findCategoryId(categories, 'semi-finished');
-
-  return [
-    {
-      key: 'fresh-fish',
-      title: 'Свежая рыба',
-      subtitle: 'Охлажденные позиции',
-      imageSrc: categoryAssets['fresh-fish'],
-      matches: (product) =>
-        hasCategory(product, freshId) || /лосос|треск|хек/i.test(`${product.name} ${product.shortDescription}`)
-    },
-    {
-      key: 'conserves',
-      title: 'Консервы',
-      subtitle: 'Готовые позиции',
-      imageSrc: categoryAssets.conserves,
-      matches: (product) =>
-        /сел[ьъ]д|скумбр|бан|pack|консерв/i.test(`${product.name} ${product.shortDescription} ${product.unit}`)
-    },
-    {
-      key: 'cold-smoked',
-      title: 'Холодного копчения',
-      subtitle: 'Деликатесы',
-      imageSrc: categoryAssets['cold-smoked'],
-      matches: (product) =>
-        hasCategory(product, smokedId) || /слабосол|сел[ьъ]д|нарезк|копчен/i.test(`${product.name} ${product.shortDescription}`)
-    },
-    {
-      key: 'seafood',
-      title: 'Морепродукты',
-      subtitle: 'Креветки и миксы',
-      imageSrc: categoryAssets.seafood,
-      matches: (product) =>
-        hasCategory(product, seafoodId) || /кревет|мид|кальмар|морск/i.test(`${product.name} ${product.shortDescription}`)
-    },
-    {
-      key: 'hot-smoked',
-      title: 'Горячего копчения',
-      subtitle: 'К столу',
-      imageSrc: categoryAssets['hot-smoked'],
-      matches: (product) =>
-        /горяч|скумбр/i.test(`${product.name} ${product.shortDescription}`)
-    },
-    {
-      key: 'salted-fish',
-      title: 'Солёная рыба',
-      subtitle: 'Слабосол и маринады',
-      imageSrc: categoryAssets['salted-fish'],
-      matches: (product) =>
-        /слабосол|сел[ьъ]д/i.test(`${product.name} ${product.shortDescription}`)
-    },
-    {
-      key: 'semi-finished',
-      title: 'Полуфабрикаты',
-      subtitle: 'Быстрый ужин',
-      imageSrc: categoryAssets['semi-finished'],
-      matches: (product) =>
-        hasCategory(product, semiFinishedId) || /котлет|пельмен/i.test(`${product.name} ${product.shortDescription}`)
-    }
-  ];
+export function buildDisplayCategories(categories: Category[], products: Product[]): DisplayCategory[] {
+  return categories.map((category) => ({
+    key: String(category.id),
+    title: category.name,
+    subtitle: category.description || category.name,
+    imageSrc: resolveCategoryImage(category, products),
+    categoryId: category.id,
+    matches: (product) => product.categoryIds.includes(category.id)
+  }));
 }
 
 export function buildNoveltyProducts(products: Product[], fresh: Product[]) {
@@ -126,7 +109,17 @@ export function buildNoveltyProducts(products: Product[], fresh: Product[]) {
 }
 
 export function getDisplayProductImage(product: Product) {
-  return productAssets[product.slug] ?? productAssets.default;
+  const imageUrl = product.imageUrl?.trim();
+
+  if (imageUrl && /^https?:\/\//i.test(imageUrl)) {
+    return imageUrl;
+  }
+
+  if (imageUrl && imageUrl.startsWith('/ui/')) {
+    return imageUrl;
+  }
+
+  return productAssets[product.slug] ?? imageUrl ?? productAssets.default;
 }
 
 export function getDisplayDateParts(batch: BatchSummary) {
@@ -143,13 +136,6 @@ export function getDisplayDateParts(batch: BatchSummary) {
 }
 
 export function formatUnitLabel(unit: Product['unit']) {
-  if (unit === 'kg') {
-    return 'кг';
-  }
-
-  if (unit === 'pcs') {
-    return 'шт';
-  }
-
-  return 'шт';
+  const value = unit.trim();
+  return value || 'шт';
 }

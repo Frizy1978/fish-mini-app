@@ -17,7 +17,8 @@ export function AppShell({
   timeLabel,
   logoSrc,
   hideBottomNav = false,
-  hideTopNav = false
+  hideTopNav = false,
+  contentClassName = ''
 }: {
   children: ReactNode;
   activeTab: TabKey;
@@ -29,13 +30,14 @@ export function AppShell({
   logoSrc: string;
   hideBottomNav?: boolean;
   hideTopNav?: boolean;
+  contentClassName?: string;
 }) {
   return (
     <div className='min-h-screen'>
       {!hideTopNav ? (
         <TopNavbar dateLabel={dateLabel} logoSrc={logoSrc} onHomeClick={onHomeClick} timeLabel={timeLabel} />
       ) : null}
-      <main className={hideTopNav ? 'px-4 py-5' : 'px-4 pb-32 pt-5'}>
+      <main className={`${hideTopNav ? 'px-4 py-5' : 'px-4 pb-32 pt-5'} ${contentClassName}`.trim()}>
         <div className='mx-auto w-full max-w-md'>{children}</div>
       </main>
       {!hideBottomNav ? (

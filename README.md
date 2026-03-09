@@ -1,219 +1,152 @@
 # Fominiapp
 
-MVP-система для магазина рыбы и морепродуктов:
+Telegram Mini App РґР»СЏ РјР°РіР°Р·РёРЅР° СЂС‹Р±С‹ Рё РјРѕСЂРµРїСЂРѕРґСѓРєС‚РѕРІ Fish Olha.
 
-- Telegram Mini App на Next.js;
-- REST API на Express + TypeScript;
-- PostgreSQL + Prisma;
-- mock-first интеграции для WooCommerce, Google Sheets и Telegram Bot.
+РЎС‚РµРє:
+- `apps/web`: Next.js 15, React 19, Tailwind CSS
+- `apps/api`: Express, TypeScript, Prisma, PostgreSQL
+- `packages/shared`: РѕР±С‰РёРµ С‚РёРїС‹, СѓС‚РёР»РёС‚С‹, mock data
 
-Проект рассчитан на сценарий предзаказов без онлайн-оплаты: покупатель собирает заявку в Mini App, оператор консолидирует спрос, а оплата происходит наличными при выдаче.
-
-## Стек
-
-- `apps/web`: Next.js 15, React 19, Tailwind CSS, framer-motion, lucide-react
-- `apps/api`: Express 5, TypeScript, Prisma, PostgreSQL, Zod
-- `packages/shared`: общие типы, mock data, утилиты расчета корзины
-
-## Структура
+## РЎС‚СЂСѓРєС‚СѓСЂР°
 
 ```text
 .
-├─ apps/
-│  ├─ api/            # Backend API, Prisma schema, seed, integration scaffolds
-│  └─ web/            # Telegram Mini App frontend
-├─ packages/
-│  └─ shared/         # Shared DTO, catalog mock data, helpers
-├─ docker-compose.yml
-└─ .env.example
+в”њв”Ђ apps/
+в”‚  в”њв”Ђ api/
+в”‚  в””в”Ђ web/
+в”њв”Ђ packages/
+в”‚  в””в”Ђ shared/
+в”њв”Ђ docker-compose.yml
+в””в”Ђ .env.example
 ```
 
-## Быстрый старт
+## Р‘С‹СЃС‚СЂС‹Р№ СЃС‚Р°СЂС‚
 
-1. Установите зависимости:
-
+1. РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё:
 ```bash
 npm install
 ```
 
-2. Поднимите PostgreSQL:
-
+2. РџРѕРґРЅСЏС‚СЊ Postgres:
 ```bash
 docker compose up -d
 ```
 
-3. Подготовьте env:
+3. РџРѕРґРіРѕС‚РѕРІРёС‚СЊ env:
+- СЃРєРѕРїРёСЂРѕРІР°С‚СЊ [`.env.example`](/E:/aiprojects/fominiapp/.env.example) РІ `.env` РєР°Рє РѕР±С‰СѓСЋ РїР°РјСЏС‚РєСѓ;
+- СЃРєРѕРїРёСЂРѕРІР°С‚СЊ [`apps/api/.env.example`](/E:/aiprojects/fominiapp/apps/api/.env.example) РІ `apps/api/.env`;
+- СЃРєРѕРїРёСЂРѕРІР°С‚СЊ [`apps/web/.env.example`](/E:/aiprojects/fominiapp/apps/web/.env.example) РІ `apps/web/.env.local`.
 
-- Скопируйте [`.env.example`](/E:/aiprojects/fominiapp/.env.example) в `.env` для общей справки.
-- Скопируйте [`apps/api/.env.example`](/E:/aiprojects/fominiapp/apps/api/.env.example) в `apps/api/.env`.
-- Скопируйте [`apps/web/.env.example`](/E:/aiprojects/fominiapp/apps/web/.env.example) в `apps/web/.env.local`.
-
-4. Сгенерируйте Prisma client, примените схему и загрузите seed:
-
+4. РџРѕРґРіРѕС‚РѕРІРёС‚СЊ Prisma:
 ```bash
 npm run prisma:generate --workspace @fominiapp/api
 npm run prisma:migrate --workspace @fominiapp/api
 npm run prisma:seed --workspace @fominiapp/api
 ```
 
-5. Запустите оба приложения:
-
+5. Р—Р°РїСѓСЃС‚РёС‚СЊ backend Рё frontend:
 ```bash
-npm run dev
-```
-
-- Mini App: `http://localhost:3000`
-- API: `http://localhost:4000`
-- Healthcheck API: `http://localhost:4000/health`
-
-## Отдельный запуск
-
-Frontend:
-
-```bash
+npm run dev --workspace @fominiapp/api
 npm run dev --workspace @fominiapp/web
 ```
 
-Backend:
+## Р Р°Р±РѕС‡РёРµ СЂРµР¶РёРјС‹
 
-```bash
-npm run dev --workspace @fominiapp/api
-```
+### Live СЂРµР¶РёРј
 
-## Что реализовано
+РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ СЂРµР°Р»СЊРЅРѕР№ СЂР°Р±РѕС‚С‹ СЃ backend Рё WooCommerce.
 
-### Frontend Mini App
-
-- mobile-first UI на русском языке;
-- splash screen, главная, каталог, карточка товара, корзина, подтверждение, профиль, success state;
-- нижняя навигация;
-- поиск и фильтрация по категориям;
-- быстрый add-to-cart и расширенная карточка товара;
-- state management корзины с сохранением в `localStorage`;
-- Telegram WebApp scaffold: `ready()`, `expand()`, `initData`/`initDataUnsafe`.
-
-### Backend API
-
-- `POST /api/v1/auth/telegram`
-- `GET /api/v1/auth/me`
-- `GET /api/v1/batch/active`
-- `GET /api/v1/catalog/categories`
-- `GET /api/v1/catalog/products`
-- `GET /api/v1/catalog/products/:id`
-- `GET /api/v1/catalog/new`
-- `GET /api/v1/catalog/featured`
-- `GET /api/v1/catalog/products/:id/related`
-- `POST /api/v1/cart/preview`
-- `POST /api/v1/requests`
-- `GET /api/v1/requests/my`
-- `POST /api/v1/admin/catalog/sync`
-- `POST /api/v1/admin/sheets/rebuild/:batchId`
-- `POST /api/v1/admin/batch/activate`
-- `POST /api/v1/admin/batch/close`
-
-### Данные и Prisma
-
-Схема включает:
-
-- `User`
-- `Batch`
-- `ProductCache`
-- `Request`
-- `RequestItem`
-- `IntegrationJob`
-
-Seed добавляет:
-
-- активный batch;
-- demo user;
-- 12 mock товаров;
-- демонстрационную заявку.
-
-## Mock mode
-
-### Frontend mock mode
-
-Если в `apps/web/.env.local` оставить:
-
+`apps/api/.env`:
 ```env
-NEXT_PUBLIC_USE_MOCK_API=true
+WOOCOMMERCE_MOCK_MODE=false
+WOOCOMMERCE_BASE_URL=https://fisholha.ru
+WOOCOMMERCE_CONSUMER_KEY=...
+WOOCOMMERCE_CONSUMER_SECRET=...
+WOOCOMMERCE_SYNC_INTERVAL_MINUTES=2
+TELEGRAM_DEV_MODE=true
 ```
 
-Mini App будет работать без живого API, используя `packages/shared` и `localStorage`.
+`apps/web/.env.local`:
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+NEXT_PUBLIC_USE_MOCK_API=false
+NEXT_PUBLIC_TELEGRAM_DEV_MODE=true
+```
 
-### Backend mock mode
+Р’Р°Р¶РЅРѕ:
+- РµСЃР»Рё `NEXT_PUBLIC_USE_MOCK_API=true`, frontend Р±СѓРґРµС‚ РїРѕРєР°Р·С‹РІР°С‚СЊ mock РєР°С‚РµРіРѕСЂРёРё, mock С‚РѕРІР°СЂС‹ Рё mock РёР·РѕР±СЂР°Р¶РµРЅРёСЏ;
+- РµСЃР»Рё `WOOCOMMERCE_MOCK_MODE=true`, backend РЅРµ Р±СѓРґРµС‚ С‚СЏРЅСѓС‚СЊ Р¶РёРІРѕР№ РєР°С‚Р°Р»РѕРі РёР· WooCommerce.
 
-Если оставить:
+### Mock СЂРµР¶РёРј
 
+РџРѕРґС…РѕРґРёС‚ РґР»СЏ Р°РІС‚РѕРЅРѕРјРЅРѕР№ Р»РѕРєР°Р»СЊРЅРѕР№ СЂР°Р·СЂР°Р±РѕС‚РєРё Р±РµР· live backend flow.
+
+`apps/api/.env`:
 ```env
 WOOCOMMERCE_MOCK_MODE=true
 GOOGLE_SHEETS_MOCK_MODE=true
 TELEGRAM_DEV_MODE=true
 ```
 
-то backend:
+`apps/web/.env.local`:
+```env
+NEXT_PUBLIC_USE_MOCK_API=true
+```
 
-- берет каталог из mock data;
-- пишет задания интеграций в `IntegrationJob`;
-- пропускает строгую Telegram auth-проверку в dev-сценарии.
+## РњРёРЅРёРјР°Р»СЊРЅС‹Р№ С‡РµРє-Р»РёСЃС‚ Р·Р°РїСѓСЃРєР° РІ live СЂРµР¶РёРјРµ
 
-## Интеграции
-
-### WooCommerce
-
-Файл [`apps/api/src/modules/integrations/woocommerce.service.ts`](/E:/aiprojects/fominiapp/apps/api/src/modules/integrations/woocommerce.service.ts) содержит scaffold для:
-
-- загрузки товаров;
-- маппинга WooCommerce product -> `ProductCache`;
-- ручной синхронизации каталога.
-
-Для подключения укажите:
-
-- `WOOCOMMERCE_BASE_URL`
-- `WOOCOMMERCE_CONSUMER_KEY`
-- `WOOCOMMERCE_CONSUMER_SECRET`
+1. РџСЂРѕРІРµСЂРёС‚СЊ `apps/api/.env`:
 - `WOOCOMMERCE_MOCK_MODE=false`
+- `WOOCOMMERCE_BASE_URL` Р·Р°РїРѕР»РЅРµРЅ
+- `WOOCOMMERCE_CONSUMER_KEY` Р·Р°РїРѕР»РЅРµРЅ
+- `WOOCOMMERCE_CONSUMER_SECRET` Р·Р°РїРѕР»РЅРµРЅ
 
-### Google Sheets
+2. РџСЂРѕРІРµСЂРёС‚СЊ `apps/web/.env.local`:
+- `NEXT_PUBLIC_API_BASE_URL=http://localhost:4000`
+- `NEXT_PUBLIC_USE_MOCK_API=false`
 
-Файл [`apps/api/src/modules/integrations/google-sheets.service.ts`](/E:/aiprojects/fominiapp/apps/api/src/modules/integrations/google-sheets.service.ts) подготавливает:
+3. Р—Р°РїСѓСЃС‚РёС‚СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ:
+```bash
+npm run dev --workspace @fominiapp/api
+npm run dev --workspace @fominiapp/web
+```
 
-- customer requests sheet row;
-- consolidated products sheet rows;
-- rebuild по batch.
+4. РџСЂРѕРІРµСЂРёС‚СЊ API:
+```bash
+curl http://localhost:4000/health
+curl http://localhost:4000/api/v1/catalog/categories
+curl http://localhost:4000/api/v1/catalog/products
+```
 
-Сейчас live-ветка оставлена как scaffold, а mock-ветка безопасно пишет задания в `IntegrationJob`.
+5. РџСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РїРµСЂРµСЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ РєР°С‚Р°Р»РѕРі:
+```bash
+curl -X POST http://localhost:4000/api/v1/admin/catalog/sync
+```
 
-### Telegram Bot
+## Р§С‚Рѕ РїСЂРѕРІРµСЂРёС‚СЊ РїРѕСЃР»Рµ Р·Р°РїСѓСЃРєР°
 
-Файл [`apps/api/src/modules/integrations/telegram-bot.service.ts`](/E:/aiprojects/fominiapp/apps/api/src/modules/integrations/telegram-bot.service.ts) содержит:
+- hero page РѕС‚РєСЂС‹РІР°РµС‚СЃСЏ РїРµСЂРІРѕР№;
+- РєР°С‚Р°Р»РѕРі Р·Р°РіСЂСѓР¶Р°РµС‚ live РєР°С‚РµРіРѕСЂРёРё Рё live С‚РѕРІР°СЂС‹;
+- Сѓ РєР°С‚Р°Р»РѕРіР° Р±РµР»С‹Р№ С„РѕРЅ;
+- РёР·РѕР±СЂР°Р¶РµРЅРёСЏ С‚РѕРІР°СЂРѕРІ Рё РєР°С‚РµРіРѕСЂРёР№ РїСЂРёС…РѕРґСЏС‚ РЅРµ РёР· mock, Р° РёР· backend/WooCommerce;
+- РµРґРёРЅРёС†С‹ РёР·РјРµСЂРµРЅРёСЏ Рё С†РµРЅС‹ РѕС‚РѕР±СЂР°Р¶Р°СЋС‚СЃСЏ РєР°Рє РґР°РЅРЅС‹Рµ РёР· live РєР°С‚Р°Р»РѕРіР°;
+- РїРѕРёСЃРє, РєРѕСЂР·РёРЅР°, РїСЂРѕС„РёР»СЊ Рё РёСЃС‚РѕСЂРёСЏ СЂР°Р±РѕС‚Р°СЋС‚ Р±РµР· regressions.
 
-- кнопку запуска Mini App;
-- отправку подтверждения по заявке;
-- mock fallback, если токен бота не задан.
-
-## Telegram Mini App URL
-
-Для Telegram BotFather укажите URL Mini App из `TELEGRAM_MINI_APP_URL`.
-
-Для локальной разработки обычно используют туннель, например через `ngrok` или аналог, после чего:
-
-- обновляют `TELEGRAM_MINI_APP_URL`;
-- выключают `NEXT_PUBLIC_USE_MOCK_API`, если нужен живой backend flow;
-- передают публичный URL в конфиг бота.
-
-## Проверка качества
-
-После установки зависимостей можно прогнать:
+## РџСЂРѕРІРµСЂРєР° РєР°С‡РµСЃС‚РІР°
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-## Следующий этап
+## Текст и кодировка
 
-- Подключить реальный Telegram initData validation в production-режиме с обязательным бот-токеном.
-- Довести live-ветку Google Sheets до реального API-клиента.
-- Добавить административный UI для управления batch и повторных выгрузок.
-- Расширить WooCommerce mapping через meta fields для `unit` и `isWeighted`.
+- Все русские UI-строки и документация должны сохраняться в UTF-8 без BOM.
+- При правках текстовых файлов с русским текстом нельзя сохранять их в ANSI, CP1251 или другой локальной кодировке.
+- После правок текстов нужно проверять UI на mojibake и при необходимости повторно сохранять файл в UTF-8.
+
+## ????? ? ?????????
+
+- ??? ??????? UI-?????? ? ???????????? ?????? ??????????? ? UTF-8 ??? BOM.
+- ??? ??????? ????????? ?????? ? ??????? ??????? ?????? ????????? ?? ? ANSI, CP1251 ??? ?????? ????????? ?????????.
+- ????? ?????? ??????? ????? ????????? UI ?? mojibake ? ??? ????????????? ???????? ????????? ???? ? UTF-8.

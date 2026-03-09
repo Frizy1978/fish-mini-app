@@ -1,14 +1,14 @@
-import type { CartItemInput, CartPreview, CartPreviewItem, Product } from "./types";
+﻿import type { CartItemInput, CartPreview, CartPreviewItem, Product } from "./types";
 
 const WEIGHTED_DISCLAIMER =
   "Весовые позиции пересчитываются после сборки. Итоговая сумма может немного измениться.";
 
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
+  const formatted = new Intl.NumberFormat("ru-RU", {
     maximumFractionDigits: 0
   }).format(value);
+
+  return `${formatted} руб.`;
 }
 
 export function calculateCartPreview(items: CartItemInput[], products: Product[]): CartPreview {

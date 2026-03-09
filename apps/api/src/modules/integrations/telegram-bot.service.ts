@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+﻿import { Prisma } from "@prisma/client";
 import type { CreatedRequest, UserProfile } from "@fominiapp/shared";
 
 import { env } from "../../config/env.js";
@@ -6,12 +6,63 @@ import { logger } from "../../lib/logger.js";
 import { prisma } from "../../lib/prisma.js";
 
 class TelegramBotService {
+  getLaunchUrl() {
+    return env.TELEGRAM_MINI_APP_URL ?? "https://example.com";
+  }
+
   buildLaunchButton() {
     return {
       text: "Открыть мини-приложение",
       web_app: {
-        url: env.TELEGRAM_MINI_APP_URL ?? "https://example.com"
+        url: this.getLaunchUrl()
       }
+    };
+  }
+
+  buildMenuButtonPayload() {
+    return {
+      type: "web_app",
+      text: "Открыть магазин",
+      web_app: {
+        url: this.getLaunchUrl()
+      }
+    };
+  }
+
+  async configureMenuButton() {
+    if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_MINI_APP_URL) {
+      return {
+        mode: "mock",
+        ready: false,
+        reason: "missing_bot_token_or_mini_app_url",
+        launchUrl: this.getLaunchUrl()
+      };
+    }
+
+    const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/setChatMenuButton`;
+    const menuButton = this.buildMenuButtonPayload();
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        menu_button: menuButton
+      })
+    });
+
+    if (!response.ok) {
+      const payload = await response.text();
+      logger.error("Telegram menu button setup failed", payload);
+      throw new Error("Не удалось настроить menu button Telegram");
+    }
+
+    return {
+      mode: "live",
+      ready: true,
+      launchUrl: this.getLaunchUrl(),
+      menuButton
     };
   }
 

@@ -1,4 +1,4 @@
-export type BatchStatus = "draft" | "open" | "closed" | "archived";
+﻿export type BatchStatus = "draft" | "open" | "closed" | "archived";
 
 export type RequestStatus =
   | "draft"
@@ -10,7 +10,7 @@ export type RequestStatus =
   | "ready_for_pickup"
   | "completed";
 
-export type ProductUnit = "kg" | "pcs" | "pack";
+export type ProductUnit = string;
 
 export interface Category {
   id: number;
@@ -18,6 +18,7 @@ export interface Category {
   name: string;
   description: string;
   accent: string;
+  imageUrl?: string;
 }
 
 export interface Product {
@@ -127,18 +128,13 @@ export interface CatalogResponse {
 
 export interface TelegramAuthPayload {
   initData?: string;
-  initDataUnsafe?: {
-    user?: {
-      id: number;
-      username?: string;
-      first_name?: string;
-      last_name?: string;
-    };
-  };
 }
 
 export interface TelegramSession {
   token: string;
+  telegramUserId: string;
+  isTelegramAuth: boolean;
+  authMode: "telegram" | "dev";
   user: UserProfile;
 }
 

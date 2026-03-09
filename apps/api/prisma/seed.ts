@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, RequestStatus } from "@prisma/client";
+﻿import { Prisma, PrismaClient, RequestStatus } from "@prisma/client";
 import { demoUser, mockBatch, mockProducts } from "@fominiapp/shared";
 
 const prisma = new PrismaClient();
@@ -108,18 +108,18 @@ async function main() {
   });
 
   await prisma.request.upsert({
-    where: { requestId: "REQ-20260306-DEMO" },
+    where: { requestId: "MSK-0001-00000001" },
     update: {},
     create: {
-      requestId: "REQ-20260306-DEMO",
+      requestId: "MSK-0001-00000001",
       batchId: batch.id,
       userId: user.id,
       status: RequestStatus.submitted,
       estimatedTotal: 2442,
       currency: "RUB",
-      comment: "Если будет мидия крупнее, замените на нее.",
+      comment: "Р•СЃР»Рё Р±СѓРґРµС‚ РјРёРґРёСЏ РєСЂСѓРїРЅРµРµ, Р·Р°РјРµРЅРёС‚Рµ РЅР° РЅРµРµ.",
       itemsJson: [
-        { productId: 101, qtyRequested: 0.8, itemComment: "Стейки потолще" },
+        { productId: 101, qtyRequested: 0.8, itemComment: "РЎС‚РµР№РєРё РїРѕС‚РѕР»С‰Рµ" },
         { productId: 107, qtyRequested: 1 }
       ],
       submittedAt: new Date("2026-03-06T10:00:00.000Z"),
@@ -127,18 +127,18 @@ async function main() {
         create: [
           {
             productId: 101,
-            productNameSnapshot: "Стейк лосося охлажденный",
+            productNameSnapshot: "РЎС‚РµР№Рє Р»РѕСЃРѕСЃСЏ РѕС…Р»Р°Р¶РґРµРЅРЅС‹Р№",
             skuSnapshot: "SALMON-STEAK",
             unit: "kg",
             qtyRequested: 0.8,
             priceSnapshot: 2190,
             estimatedSum: 1752,
-            itemComment: "Стейки потолще",
+            itemComment: "РЎС‚РµР№РєРё РїРѕС‚РѕР»С‰Рµ",
             isWeighted: true
           },
           {
             productId: 107,
-            productNameSnapshot: "Форель слабосоленая нарезка",
+            productNameSnapshot: "Р¤РѕСЂРµР»СЊ СЃР»Р°Р±РѕСЃРѕР»РµРЅР°СЏ РЅР°СЂРµР·РєР°",
             skuSnapshot: "TROUT-SLICED",
             unit: "pack",
             qtyRequested: 1,

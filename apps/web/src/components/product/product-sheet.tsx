@@ -55,7 +55,7 @@ export function ProductSheet({
 
             <div className='space-y-5 overflow-y-auto px-5 py-5'>
               <div className='rounded-[24px] bg-white p-5 shadow-soft'>
-                <img alt={product.name} className='mx-auto h-52 w-full object-contain' src={getDisplayProductImage(product)} />
+                <img alt={product.name} className='mx-auto h-52 w-full object-contain' decoding='async' loading='lazy' src={getDisplayProductImage(product)} />
               </div>
 
               <div className='flex flex-wrap gap-2'>
@@ -67,7 +67,7 @@ export function ProductSheet({
               <div>
                 <h2 className='font-display text-[28px] font-bold leading-tight text-ink'>{product.name}</h2>
                 <p className='mt-2 font-accent text-lg font-semibold text-accent'>
-                  {formatCurrency(product.price)} / {product.unit}
+                  {formatCurrency(product.price)}/{product.unit}
                 </p>
                 <p className='mt-4 text-sm leading-7 text-slate-600'>{product.fullDescription}</p>
               </div>
@@ -137,3 +137,4 @@ export function ProductSheet({
     </AnimatePresence>
   );
 }
+

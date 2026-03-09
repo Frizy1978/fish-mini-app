@@ -142,7 +142,7 @@ export function CartPanel({
             <div className='flex gap-4'>
               <div className='flex h-24 w-24 shrink-0 items-center justify-center rounded-[18px] bg-[#f7fbff]'>
                 {product ? (
-                  <img alt={product.name} className='h-20 w-20 object-contain' src={getDisplayProductImage(product)} />
+                  <img alt={product.name} className='h-20 w-20 object-contain' decoding='async' loading='lazy' src={getDisplayProductImage(product)} />
                 ) : null}
               </div>
 
@@ -154,7 +154,7 @@ export function CartPanel({
                     </p>
                     <p className='mt-1 font-accent text-sm font-semibold text-ink'>{item.productName}</p>
                     <p className='mt-1 text-xs text-slate-500'>
-                      {formatCurrency(item.price)} / {item.unit}
+                      {formatCurrency(item.price)}/{item.unit}
                     </p>
                   </div>
                   <button
@@ -205,3 +205,4 @@ export function CartPanel({
     </div>
   );
 }
+

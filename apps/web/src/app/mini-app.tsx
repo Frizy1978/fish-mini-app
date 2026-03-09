@@ -1,9 +1,10 @@
-﻿'use client';
+"use client";
 
 import {
   calculateCartPreview,
   demoUser,
   formatCurrency,
+  type BatchSummary,
   type Product,
   type RequestRecord,
   type UserProfile
@@ -17,15 +18,12 @@ import { CategoryCarousel } from '../components/catalog/category-carousel';
 import { ProductCard } from '../components/catalog/product-card';
 import { HeroCard } from '../components/home/hero-card';
 import { AppShell } from '../components/layout/app-shell';
-import { SplashScreen } from '../components/layout/splash-screen';
 import { ProductSheet } from '../components/product/product-sheet';
 import { ProfilePanel } from '../components/profile/profile-panel';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Panel } from '../components/ui/panel';
 import { SearchField } from '../components/ui/search-field';
-import { useCart } from '../features/cart/cart-store';
-import { useTelegram } from '../features/telegram/use-telegram';
 import { loadBootPayload, previewCart, submitRequest, type BootPayload } from '../lib/api';
 import {
   brandAssets,
@@ -33,8 +31,23 @@ import {
   buildNoveltyProducts,
   getDisplayDateParts
 } from '../lib/storefront-display';
+import { useCart } from '../features/cart/cart-store';
+import { useTelegram } from '../features/telegram/use-telegram';
 
 type TabKey = 'home' | 'catalog' | 'cart' | 'profile';
+
+const fallbackBatch: BatchSummary = {
+  id: 1,
+  batchId: 'LOADING',
+  title: 'Прием заявок открыт',
+  city: 'Мурманск',
+  pickupPoint: 'Точка выдачи уточняется',
+  status: 'open',
+  startAt: '2026-03-09T00:00:00.000Z',
+  endAt: '2026-03-19T20:00:00.000Z',
+  pickupWindow: '19 марта, 12:00-20:00',
+  isActive: true
+};
 
 export function MiniApp() {
   const { items, count, addItem, clear, removeItem, updateItem } = useCart();
@@ -45,7 +58,7 @@ export function MiniApp() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [activeCategoryKey, setActiveCategoryKey] = useState('fresh-fish');
+  const [activeCategoryKey, setActiveCategoryKey] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutMode, setCheckoutMode] = useState(false);
   const [requestComment, setRequestComment] = useState('');
@@ -60,7 +73,10 @@ export function MiniApp() {
     try {
       setStatus('loading');
       setError(null);
-      const payload = await loadBootPayload(telegram.initData, telegram.initDataUnsafe);
+      if (!telegram.isTelegramEnvironment && !telegram.isDevFallback && process.env.NEXT_PUBLIC_USE_MOCK_API === 'false') {
+        throw new Error('Откройте приложение из Telegram или включите dev mode');
+      }
+      const payload = await loadBootPayload(telegram.initData);
       setBoot(payload);
       setProfile(payload.session.user);
       setStatus('ready');
@@ -71,12 +87,8 @@ export function MiniApp() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void bootstrap();
-    }, 450);
-
-    return () => window.clearTimeout(timer);
-  }, [telegram.initData]);
+    void bootstrap();
+  }, [telegram.initData, telegram.isDevFallback, telegram.isTelegramEnvironment]);
 
   useEffect(() => {
     if (!boot) {
@@ -93,26 +105,28 @@ export function MiniApp() {
       .catch(() => setPreview(calculateCartPreview(items, boot.products)));
   }, [boot, items]);
 
-  const displayCategories = useMemo(() => (boot ? buildDisplayCategories(boot.categories) : []), [boot]);
-  const defaultCategoryKey = displayCategories[0]?.key ?? 'fresh-fish';
+  const displayCategories = useMemo(
+    () => (boot ? buildDisplayCategories(boot.categories, boot.products) : []),
+    [boot]
+  );
 
   useEffect(() => {
     if (!displayCategories.length) {
       return;
     }
 
-    if (!displayCategories.some((category) => category.key === activeCategoryKey)) {
-      setActiveCategoryKey(displayCategories[0].key);
+    if (activeCategoryKey && !displayCategories.some((category) => category.key === activeCategoryKey)) {
+      setActiveCategoryKey('');
     }
   }, [activeCategoryKey, displayCategories]);
 
   const activeCategory = useMemo(
-    () => displayCategories.find((category) => category.key === activeCategoryKey) ?? displayCategories[0],
+    () => displayCategories.find((category) => category.key === activeCategoryKey),
     [activeCategoryKey, displayCategories]
   );
 
   const hasSearch = deferredSearch.trim().length > 0;
-  const hasActiveCategoryFilter = activeCategoryKey !== defaultCategoryKey;
+  const hasActiveCategoryFilter = Boolean(activeCategoryKey);
 
   const filteredProducts = useMemo(() => {
     if (!boot) {
@@ -126,19 +140,40 @@ export function MiniApp() {
         return false;
       }
 
-      const matchesCategory = hasActiveCategoryFilter && activeCategory ? activeCategory.matches(product) : true;
+      const matchesCategory = query ? true : activeCategory ? activeCategory.matches(product) : true;
       const matchesSearch = query
         ? `${product.name} ${product.shortDescription} ${product.sku}`.toLowerCase().includes(query)
         : true;
 
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, boot, deferredSearch, hasActiveCategoryFilter]);
+  }, [activeCategory, boot, deferredSearch]);
 
   const noveltyProducts = useMemo(
     () => (boot ? buildNoveltyProducts(boot.products, boot.fresh) : []),
     [boot]
   );
+
+  useEffect(() => {
+    if (!displayCategories.length && !noveltyProducts.length) {
+      return;
+    }
+
+    const preloadSources = [
+      ...displayCategories.slice(0, 4).map((category) => category.imageSrc),
+      ...noveltyProducts.slice(0, 8).map((product) => product.imageUrl)
+    ];
+
+    preloadSources.forEach((src) => {
+      if (!src) {
+        return;
+      }
+
+      const image = new window.Image();
+      image.decoding = 'async';
+      image.src = src;
+    });
+  }, [displayCategories, noveltyProducts]);
 
   const batchClosed = boot?.batch.status !== 'open';
 
@@ -179,7 +214,6 @@ export function MiniApp() {
       setRequestComment('');
       const refreshed = await loadBootPayload(
         telegram.initData,
-        telegram.initDataUnsafe,
         boot.session.token
       );
       setBoot(refreshed);
@@ -191,10 +225,6 @@ export function MiniApp() {
     }
   };
 
-  if (status === 'loading' || !boot) {
-    return <SplashScreen />;
-  }
-
   if (status === 'error') {
     return (
       <div className='min-h-screen px-4 py-10'>
@@ -204,35 +234,33 @@ export function MiniApp() {
               <AlertTriangle className='h-6 w-6' />
             </div>
             <h1 className='mt-4 font-display text-2xl font-bold text-ink'>
-              Не удалось открыть приложение
-            </h1>
-            <p className='mt-2 text-sm leading-6 text-slate-500'>{error}</p>
+              Не удалось открыть приложение</h1>
+            <p className='mt-2 text-sm leading-6 text-slate-500'>Откройте приложение из Telegram или включите dev mode.</p>
             <Button className='mt-5 w-full gap-2' onClick={() => void bootstrap()}>
               <RefreshCcw className='h-4 w-4' />
-              Повторить
-            </Button>
+              Повторить</Button>
           </Panel>
         </div>
       </div>
     );
   }
 
-  const { date, time } = getDisplayDateParts(boot.batch);
+  const activeBatch = boot?.batch ?? fallbackBatch;
+  const { date, time } = getDisplayDateParts(activeBatch);
 
   const stateBanner = batchClosed ? (
     <Panel className='mb-4 border border-brand/20 bg-softblue/50'>
       <p className='font-accent text-sm font-semibold text-ink'>Прием заявок сейчас закрыт</p>
       <p className='mt-2 text-sm leading-6 text-slate-600'>
-        Каталог и история доступны, но отправка новых заявок возобновится с новым batch.
-      </p>
+        Каталог и история доступны, но отправка новых заявок возобновится с новым batch.</p>
     </Panel>
   ) : null;
 
-  if (tab === 'home') {
+  if (!boot || tab === 'home') {
     return (
       <>
         <AppShell
-          activeTab={tab}
+          activeTab='home'
           cartCount={count}
           dateLabel={date}
           hideBottomNav
@@ -243,10 +271,12 @@ export function MiniApp() {
           timeLabel={time}
         >
           <HeroCard
-            batch={boot.batch}
+            batch={activeBatch}
             heroSrc={brandAssets.hero}
             logoSrc={brandAssets.logo}
-            onOpenCatalog={() => switchTab('catalog')}
+            onOpenCatalog={() => {
+              switchTab('catalog');
+            }}
           />
         </AppShell>
 
@@ -303,6 +333,7 @@ export function MiniApp() {
       <AppShell
         activeTab={tab}
         cartCount={count}
+        contentClassName={tab === 'catalog' ? 'bg-white' : ''}
         dateLabel={date}
         hideBottomNav={false}
         logoSrc={brandAssets.logo}
@@ -318,25 +349,26 @@ export function MiniApp() {
 
             {displayCategories.length ? (
               <CategoryCarousel
-                activeCategoryKey={activeCategory?.key ?? displayCategories[0].key}
+                activeCategoryKey={activeCategory?.key ?? ''}
                 categories={displayCategories}
                 onSelect={setActiveCategoryKey}
               />
             ) : null}
-
-            <section className='space-y-4'>
-              <h2 className='text-[24px] font-semibold text-slate-950'>Новинки</h2>
-              <div className='grid grid-cols-2 gap-4'>
-                {noveltyProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    onOpen={() => setSelectedProduct(product)}
-                    onQuickAdd={() => handleQuickAdd(product)}
-                    product={product}
-                  />
-                ))}
-              </div>
-            </section>
+            {!hasSearch && !hasActiveCategoryFilter ? (
+              <section className='space-y-4'>
+                <h2 className='text-[24px] font-semibold text-slate-950'>Новинки</h2>
+                <div className='grid grid-cols-2 gap-4'>
+                  {noveltyProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      onOpen={() => setSelectedProduct(product)}
+                      onQuickAdd={() => handleQuickAdd(product)}
+                      product={product}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             {hasSearch || hasActiveCategoryFilter ? (
               <section className='space-y-4'>
@@ -444,3 +476,9 @@ export function MiniApp() {
     </>
   );
 }
+
+
+
+
+
+

@@ -1,10 +1,14 @@
-import { batchService } from "../batch/batch.service.js";
+﻿import { batchService } from "../batch/batch.service.js";
 import { googleSheetsService } from "../integrations/google-sheets.service.js";
 import { wooCommerceService } from "../integrations/woocommerce.service.js";
 
 class AdminService {
   async syncCatalog() {
-    return wooCommerceService.syncCatalog();
+    return wooCommerceService.syncCatalog("manual");
+  }
+
+  startCatalogSyncScheduler() {
+    wooCommerceService.startScheduler();
   }
 
   async rebuildSheets(batchId: string) {

@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { z } from "zod";
 
 import { asyncHandler } from "../../lib/http.js";
@@ -7,19 +7,7 @@ import { authService } from "./auth.service.js";
 const authRouter = Router();
 
 const telegramSchema = z.object({
-  initData: z.string().optional(),
-  initDataUnsafe: z
-    .object({
-      user: z
-        .object({
-          id: z.number(),
-          username: z.string().optional(),
-          first_name: z.string().optional(),
-          last_name: z.string().optional()
-        })
-        .optional()
-    })
-    .optional()
+  initData: z.string().optional()
 });
 
 authRouter.post(

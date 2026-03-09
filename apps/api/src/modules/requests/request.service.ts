@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+﻿import { Prisma } from "@prisma/client";
 import type { CartPreviewItem, CreatedRequest, RequestRecord, RequestSubmission } from "@fominiapp/shared";
 
 import { RequestStatus } from "@prisma/client";
@@ -10,11 +10,12 @@ import { cartService } from "../cart/cart.service.js";
 import { googleSheetsService } from "../integrations/google-sheets.service.js";
 import { telegramBotService } from "../integrations/telegram-bot.service.js";
 
-function createRequestId() {
-  const now = new Date();
-  const stamp = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `REQ-${stamp}-${suffix}`;
+function createTemporaryRequestId() {
+  return `TMP-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function formatRequestId(batchSequence: number, requestSequence: number) {
+  return `MSK-${String(batchSequence).padStart(4, "0")}-${String(requestSequence).padStart(8, "0")}`;
 }
 
 class RequestService {
@@ -24,7 +25,7 @@ class RequestService {
     });
 
     if (!batch || batch.status !== "open") {
-      throw new ApiError(400, "Сбор заявок закрыт или batch не найден");
+      throw new ApiError(400, "РЎР±РѕСЂ Р·Р°СЏРІРѕРє Р·Р°РєСЂС‹С‚ РёР»Рё batch РЅРµ РЅР°Р№РґРµРЅ");
     }
 
     const user = await prisma.user.upsert({
@@ -50,12 +51,12 @@ class RequestService {
 
     const preview = await cartService.preview(payload.items);
     if (!preview.items.length) {
-      throw new ApiError(400, "Корзина пуста");
+      throw new ApiError(400, "РљРѕСЂР·РёРЅР° РїСѓСЃС‚Р°");
     }
 
     const created = await prisma.request.create({
       data: {
-        requestId: createRequestId(),
+        requestId: createTemporaryRequestId(),
         batchId: batch.id,
         userId: user.id,
         status: RequestStatus.submitted,
@@ -77,6 +78,13 @@ class RequestService {
             isWeighted: item.isWeighted
           }))
         }
+      }
+    });
+
+    await prisma.request.update({
+      where: { id: created.id },
+      data: {
+        requestId: formatRequestId(batch.id, created.id)
       }
     });
 
@@ -128,7 +136,7 @@ class RequestService {
     });
 
     if (!request) {
-      throw new ApiError(404, "Заявка не найдена");
+      throw new ApiError(404, "Р—Р°СЏРІРєР° РЅРµ РЅР°Р№РґРµРЅР°");
     }
 
     return {

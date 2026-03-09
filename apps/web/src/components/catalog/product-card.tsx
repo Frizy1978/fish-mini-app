@@ -15,7 +15,13 @@ export function ProductCard({
     <article className='flex h-full flex-col rounded-[12px] bg-white p-3 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'>
       <button className='text-left' onClick={onOpen} type='button'>
         <div className='flex h-[144px] items-center justify-center rounded-[10px] bg-[#fbfbfb] p-2'>
-          <img alt={product.name} className='h-full w-full object-contain' src={getDisplayProductImage(product)} />
+          <img
+            alt={product.name}
+            className='h-full w-full object-contain'
+            decoding='async'
+            loading='lazy'
+            src={getDisplayProductImage(product)}
+          />
         </div>
       </button>
 
