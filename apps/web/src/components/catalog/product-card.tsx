@@ -5,11 +5,13 @@ import { formatUnitLabel, getDisplayProductImage } from '../../lib/storefront-di
 export function ProductCard({
   product,
   onOpen,
-  onQuickAdd
+  onQuickAdd,
+  canQuickAdd = true
 }: {
   product: Product;
   onOpen: () => void;
   onQuickAdd: () => void;
+  canQuickAdd?: boolean;
 }) {
   return (
     <article className='flex h-full flex-col rounded-[12px] bg-white p-3 shadow-[0_2px_12px_rgba(15,23,42,0.04)]'>
@@ -41,11 +43,12 @@ export function ProductCard({
       </div>
 
       <button
-        className='mt-auto inline-flex min-h-0 w-fit items-center rounded-full bg-[#168a8b] px-3 py-1.5 text-[12px] font-medium text-white'
+        className='mt-auto inline-flex min-h-0 w-fit items-center rounded-full bg-[#168a8b] px-3 py-1.5 text-[12px] font-medium text-white disabled:bg-slate-300 disabled:text-white/80'
+        disabled={!canQuickAdd}
         onClick={onQuickAdd}
         type='button'
       >
-        + В корзину
+        {canQuickAdd ? '+ В корзину' : 'Сбор закрыт'}
       </button>
     </article>
   );

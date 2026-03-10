@@ -21,6 +21,7 @@ export function CartPanel({
   products,
   preview,
   batch,
+  isBatchOpen,
   profile,
   requestComment,
   checkoutMode,
@@ -36,6 +37,7 @@ export function CartPanel({
   products: Product[];
   preview: CartPreview;
   batch: BatchSummary;
+  isBatchOpen: boolean;
   profile: UserProfile;
   requestComment: string;
   checkoutMode: boolean;
@@ -115,6 +117,11 @@ export function CartPanel({
             <AlertCircle className='mt-0.5 h-4 w-4 shrink-0 text-accent' />
             {preview.weightedDisclaimer}
           </div>
+          {!isBatchOpen ? (
+            <div className='rounded-[16px] bg-[#fff3e8] px-4 py-3 text-sm text-[#9a5b1b]'>
+              Прием заявок по текущему сбору закрыт. Проверьте историю заказов или дождитесь следующего batch.
+            </div>
+          ) : null}
           <div className='flex items-center justify-between'>
             <span className='text-sm text-slate-500'>Итого предварительно</span>
             <span className='font-accent text-xl font-semibold text-accent'>
@@ -123,8 +130,8 @@ export function CartPanel({
           </div>
         </Panel>
 
-        <Button className='w-full' disabled={submitting} onClick={onSubmit}>
-          {submitting ? 'Отправляем заявку...' : 'Подтвердить заказ'}
+        <Button className='w-full' disabled={submitting || !isBatchOpen} onClick={onSubmit}>
+          {!isBatchOpen ? 'Прием заявок закрыт' : submitting ? 'Отправляем заявку...' : 'Подтвердить заказ'}
         </Button>
       </div>
     );
@@ -199,8 +206,14 @@ export function CartPanel({
         </div>
       </Panel>
 
-      <Button className='w-full' onClick={onCheckout}>
-        Подтвердить заказ
+      {!isBatchOpen ? (
+        <Panel className='bg-[#fff3e8] text-sm text-[#9a5b1b]'>
+          Прием заявок по текущему сбору закрыт. Корзину можно просмотреть, но оформить новый заказ нельзя.
+        </Panel>
+      ) : null}
+
+      <Button className='w-full' disabled={!isBatchOpen} onClick={onCheckout}>
+        {isBatchOpen ? 'Подтвердить заказ' : 'Прием заявок закрыт'}
       </Button>
     </div>
   );

@@ -187,15 +187,20 @@ export function MiniApp() {
   };
 
   const handleQuickAdd = (product: Product) => {
+    if (batchClosed) {
+      return;
+    }
+
     addItem(product.id, product.isWeighted ? 0.5 : 1);
     switchTab('cart');
   };
 
   const handleSubmit = async () => {
-    if (!boot) {
+    if (!boot || batchClosed) {
       return;
     }
 
+    setError(null);
     setSubmitting(true);
     try {
       const created = await submitRequest(
@@ -255,6 +260,12 @@ export function MiniApp() {
         Каталог и история доступны, но отправка новых заявок возобновится с новым batch.</p>
     </Panel>
   ) : null;
+  const errorBanner = error && status === 'ready' ? (
+    <Panel className='mb-4 border border-[#f4c7c7] bg-[#fff5f5]'>
+      <p className='text-sm font-semibold text-[#a23b3b]'>Не удалось завершить действие</p>
+      <p className='mt-2 text-sm leading-6 text-[#7f4a4a]'>{error}</p>
+    </Panel>
+  ) : null;
 
   if (!boot || tab === 'home') {
     return (
@@ -281,6 +292,7 @@ export function MiniApp() {
         </AppShell>
 
         <ProductSheet
+          canAdd={!batchClosed}
           onAdd={(qty) => {
             if (!selectedProduct) {
               return;
@@ -342,6 +354,7 @@ export function MiniApp() {
         timeLabel={time}
       >
         {stateBanner}
+        {errorBanner}
 
         {tab === 'catalog' ? (
           <div className='space-y-5'>
@@ -360,6 +373,7 @@ export function MiniApp() {
                 <div className='grid grid-cols-2 gap-4'>
                   {noveltyProducts.map((product) => (
                     <ProductCard
+                      canQuickAdd={!batchClosed}
                       key={product.id}
                       onOpen={() => setSelectedProduct(product)}
                       onQuickAdd={() => handleQuickAdd(product)}
@@ -379,6 +393,7 @@ export function MiniApp() {
                   <div className='grid grid-cols-2 gap-4'>
                     {filteredProducts.map((product) => (
                       <ProductCard
+                        canQuickAdd={!batchClosed}
                         key={product.id}
                         onOpen={() => setSelectedProduct(product)}
                         onQuickAdd={() => handleQuickAdd(product)}
@@ -403,6 +418,7 @@ export function MiniApp() {
           <CartPanel
             batch={boot.batch}
             checkoutMode={checkoutMode}
+            isBatchOpen={!batchClosed}
             onBack={() => setCheckoutMode(false)}
             onCheckout={() => setCheckoutMode(true)}
             onProfileChange={(field, value) =>
@@ -430,6 +446,7 @@ export function MiniApp() {
       </AppShell>
 
       <ProductSheet
+        canAdd={!batchClosed}
         onAdd={(qty) => {
           if (!selectedProduct) {
             return;
@@ -476,9 +493,5 @@ export function MiniApp() {
     </>
   );
 }
-
-
-
-
 
 

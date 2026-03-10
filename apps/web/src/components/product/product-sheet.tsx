@@ -14,11 +14,13 @@ import { Input } from '../ui/input';
 export function ProductSheet({
   product,
   onClose,
-  onAdd
+  onAdd,
+  canAdd = true
 }: {
   product: Product | null;
   onClose: () => void;
   onAdd: (qty: number) => void;
+  canAdd?: boolean;
 }) {
   const [qty, setQty] = useState(1);
 
@@ -123,12 +125,16 @@ export function ProductSheet({
 
               <Button
                 className='w-full'
+                disabled={!canAdd}
                 onClick={() => {
+                  if (!canAdd) {
+                    return;
+                  }
                   onAdd(qty);
                   onClose();
                 }}
               >
-                Добавить на {formatCurrency(product.price * qty)}
+                {canAdd ? `Добавить на ${formatCurrency(product.price * qty)}` : 'Прием заявок закрыт'}
               </Button>
             </div>
           </motion.div>
